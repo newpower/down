@@ -1,0 +1,21 @@
+#!/usr/bin/perl
+# 
+#!/usr/bin/perl
+# 
+
+#################################################################################
+# Perl :: 					#
+# ============================================================================= #
+#################################################################################
+
+use CGI qw ( :standart);
+use CGI::Carp qw ( fatalsToBrowser );  
+
+
+
+require HTML::Parser;
+ require HTML::TokeParser;
+ use Encode;
+# use warnings;
+
+print "All oc";

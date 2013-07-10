@@ -1,0 +1,47 @@
+﻿#!/usr/bin/perl
+# 
+
+#################################################################################
+# Perl :: 					#
+# ============================================================================= #
+#################################################################################
+
+
+require "../lib/def.pl";
+# Template Module
+ use Encode;
+
+
+print "Content-Type: text/html; charset=utf-8\n\n";my $text;
+
+		my %hash_vinfo;
+		$hash_vinfo{url} = 'http://doska.zol.ru/?module=hidemail&email=q1AhFfRxx0kF4YbkkK1EbPHH1PX0Pl2a';
+	my $res = get_page(\%hash_vinfo,'');
+	
+		$hash_vinfo{res_code}=$res->code;
+		$hash_vinfo{res_html} = $res->content; 
+		
+		
+		
+		
+	
+	$varinfo{dbh}=condb("localhost","0000","root","280286","sh_downloads_zol");
+	
+		my ($fol,$hhs) = &get_query($varinfo{dbh},"	SELECT * FROM zol_doska_contragent where `id` >= '0' limit 0,10000;","hash","pr");
+#		my ($fol,$hhs) = &get_query($varinfo{dbh},"	SELECT * FROM `sh_downloads`.`t_catalog`","hash","pr");
+		&view_table1($hhs);
+	
+	
+	
+#	my ($fol,$hhs) = &get_query($varinfo{dbh},"	SELECT `id`,`text`,`url` FROM t_page where `id` = '2101' limit 0,1;","hash","pr");
+#
+#		$$hhs[0]{text} = Encode::decode('cp1251', $$hhs[0]{text});
+#		$$hhs[0]{text} = Encode::encode('utf8', $$hhs[0]{text});
+		
+#print " тест кодировки $$hhs[0]{id} --- \$\$hhs[0]{text} --==";
+
+
+exit;
+
+
+

@@ -1,0 +1,136 @@
+﻿#!/usr/bin/perl
+# 
+
+#################################################################################
+# Perl :: 					#
+# ============================================================================= #
+#################################################################################
+
+use CGI qw ( :standart);
+use CGI::Carp qw ( fatalsToBrowser );  
+
+
+
+require HTML::Parser;
+ require HTML::TokeParser;
+ use Encode;
+# use warnings;
+
+require "../lib/def.pl";
+require "../lib/parse_lib.pl";
+
+
+print "Content-Type: text/html; charset=utf-8\n\n";my $text;
+
+		#my %hash_vinfo;
+		#$hash_vinfo{url} = 'http://doska.zol.ru/?module=hidemail&email=q1AhFfRxx0kF4YbkkK1EbPHH1PX0Pl2a';
+		#my $res = get_page(\%hash_vinfo,'');
+		#
+		#$hash_vinfo{res_code}=$res->code;
+		#$hash_vinfo{res_html} = $res->content; 
+		#
+		#print $hash_vinfo{res_code}.$hash_vinfo{res_html};
+		#exit;
+		#UPDATE `zol_doska_contragent` SET `t_mail`=NULL WHERE `t_mail` IS NOT NULL limit 0,1
+	
+	$varinfo{dbh}=condb("localhost","0000","root","280286","sh_downloads_zol");
+	
+		my ($fol,$hhs) = &get_query($varinfo{dbh},"	SELECT `pc`.`id` as `id`,`pc`.`url` as `url`,`ph`.`res_html` as `res_html` FROM `page_and_catalog` as `pc`
+				LEFT JOIN `page_html_2` as `ph`	ON 
+				`pc`.`id`=`ph`.`id` where
+				`pc`.`id` = '270755' limit 0,1;","hash","pr");
+#		my ($fol,$hhs) = &get_query($varinfo{dbh},"	SELECT * FROM zol_doska_contragent where `id` >= '0' limit 0,5000;","hash","pr");
+#		my ($fol,$hhs) = &get_query($varinfo{dbh},"	SELECT * FROM `sh_downloads`.`t_catalog`","hash","pr");
+
+
+my $tex_ish = $$hhs[0]{res_html};
+			$tex_ish = Encode::decode('cp1251', $tex_ish);
+			$tex_ish = Encode::encode('utf8', $tex_ish);
+#print $tex_ish;
+#exit;
+
+			my $var_index =index($tex_ish, '<div style="text-align:center;font-weight:600;">');
+			$tex_ish =substr($tex_ish,$var_index);
+			
+			my $var_index2 =index($tex_ish, 'Объявление размещено в разделах');
+			#$var_index2=200;
+			$tex_ish =substr($tex_ish,0,$var_index2);
+					$tex_ish =~ s/\<\/span\>/^/g;
+			$tex_ish =~ s/\<\/font\>/+/g;
+			$tex_ish =~ s/\&nbsp\;/ /g;
+			$tex_ish =~ s/\<a href\=\"javascript\:sendemail\(\"/ /g;
+			$tex_ish =~ s/\"\)\;\"\>/ /g;
+			
+			#id, c_name, t_region, t_mail, t_mail_pic_link, t_tel, t_razmesheno, t_read, t_catigoriya, t_message, t_message_title	
+			$p1 = HTML::TokeParser->new(\$tex_ish) || die "Can't open: $!";
+			$p1->empty_element_tags(1);  # configure its behaviour
+		
+			while (my $token = $p1->get_tag("a")) 
+			{
+				my $url1 = $token->[1]{href} || "-";
+				my $text = $p1->get_trimmed_text("/a");
+				#my @m_mas = split(/\+/,$text);
+				$hash_rekvisit{'t_message_title'}=$text;
+				last;
+			
+			}
+			while (my $token = $p1->get_tag("p")) 
+			{
+				my $url1 = $token->[1]{valign} || "-";
+				my $text = $p1->get_trimmed_text("/p");
+				#my @m_mas = split(/\+/,$text);
+				
+					$hash_rekvisit{'t_message'}=$text;
+					last;
+			
+				
+			}	
+			
+			$tex_ish =~ s/\<br\>/\<\/span\>/g;
+			$p1 = HTML::TokeParser->new(\$tex_ish) || die "Can't open: $!";
+			$p1->empty_element_tags(1);  # configure its behaviour
+			while (my $token = $p1->get_tag("span")) 
+			{
+				my $url1 = $token->[1]{color} || "-";
+				my $text = $p1->get_trimmed_text("span");
+				#my @m_mas = split(/\+/,$text);
+				
+				my @m_mas = split(/\^/,$text);	
+				print "$m_mas[0] $m_mas[1] $text <br>";
+				if ($m_mas[0] eq 'Автор:')	{$hash_rekvisit{'c_name'}=$m_mas[1];}					
+				if ($m_mas[0] eq 'Телефон:')	{$hash_rekvisit{'t_tel'}=$m_mas[1];}					
+				if ($m_mas[0] eq 'Регион:')	{$hash_rekvisit{'t_region'}=$m_mas[1];}					
+				if ($m_mas[0] eq 'Размещено:')	
+				{
+					
+					$hash_rekvisit{'t_razmesheno'}="STR_TO_DATE( '".$m_mas[1]."', ' %d.%m.%Y %H:%i' )";
+				}					
+				if ($m_mas[0] eq 'Email:')	{$hash_rekvisit{'t_mail_pic_link'}="http://www.furazh.ru/sendemail/?email=".$m_mas[1];}					
+				if ($m_mas[0] eq 'Категория:')	{$hash_rekvisit{'t_catigoriya'}=$m_mas[1];}					
+				#print "$m_mas[0] -- $m_mas[1] <br><br><br>";
+	
+			}	
+			
+			for (keys %hash_rekvisit){
+
+				print "$_ - $hash_rekvisit{$_} <br>";
+			}
+
+	#	print $var_index.$tex_ish;	
+		 $$hhs[0]{res_html} = $tex_ish;	
+		#&view_table1($hhs);
+	
+	
+	
+#	my ($fol,$hhs) = &get_query($varinfo{dbh},"	SELECT `id`,`text`,`url` FROM t_page where `id` = '2101' limit 0,1;","hash","pr");
+#
+#		$$hhs[0]{text} = Encode::decode('cp1251', $$hhs[0]{text});
+#		$$hhs[0]{text} = Encode::encode('utf8', $$hhs[0]{text});
+		
+#print " тест кодировки $$hhs[0]{id} --- \$\$hhs[0]{text} --==";
+
+
+exit;
+
+
+

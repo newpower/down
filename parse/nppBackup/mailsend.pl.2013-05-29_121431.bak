@@ -1,0 +1,42 @@
+
+
+	use MIME::Lite;
+
+    $msg = MIME::Lite->new(
+        From     =>'vipdo@yandex.ru',
+        To       =>'89185458500@mail.ru',
+        Subject  =>'Helloooooo, nurse!',
+        Data     =>"How's it goin', eh?"
+    );
+
+
+    $msg->attr('content-type.charset' => 'UTF-8');
+    #$msg->add('X-Comment' => 'A message for you');
+	$msg->send('smtp', 'smtp.yandex.ru', 'AuthUser'=>'vipdo', 'AuthPass'=>'425qwe');
+	
+
+##!/usr/bin/perl -w
+## SMTP-mail example
+#
+## http://2lx.ru - Блог помешанного программиста
+## Статьи, учебники, руководства по программированию на C, C++, C#, PHP, Perl, RegEx, и многое другое...
+#
+#use Net::SMTP;
+#
+#$smtp = Net::SMTP->new('smtp.mail.ru', Timeout => 60,Debug   => 1);
+#$smtp->auth('89044467688@mail.ru','01534886');
+#$smtp->mail('<89044467688@mail.ru>');
+#
+#$smtp->recipient('89185458500@mail.ru', {Notify => ['FAILURE', 'DELAY'], SkipBad => 0});
+#
+#$smtp->data();
+# $smtp->datasend("From: vipdo\@yandex.ru\n");
+#    $smtp->datasend("To: 89185458500\@mail.ru\n");
+#    $smtp->datasend("Subject: Test\n");
+#    $smtp->datasend("MIME-Version: 1.0\n");
+#    $smtp->datasend("Content-Type: multipart/alternative;
+#    boundary=\"----------StarMyStar\"\n\n");
+#$smtp->datasend("\n");
+#$smtp->datasend("Hello,World\n");
+#$smtp->dataend();
+#$smtp->quit();

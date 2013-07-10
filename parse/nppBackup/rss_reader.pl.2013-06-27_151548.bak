@@ -1,0 +1,156 @@
+    #!/usr/bin/perl
+# 
+
+#################################################################################
+# Perl :: 					#
+# ============================================================================= #
+#################################################################################
+
+use CGI qw ( :standart);
+use CGI::Carp qw ( fatalsToBrowser );  
+
+
+
+require HTML::Parser;
+ require HTML::TokeParser;
+ use Encode;
+# use warnings;
+
+require "../lib/def.pl";
+require "../lib/parse_lib.pl";
+
+
+print "Content-Type: text/html; charset=utf-8\n\n";my $text;
+
+sub reader_rss_wiki
+{
+use Wiki::Toolkit::Plugin::RSS::Reader;
+
+    my $rss = Wiki::Toolkit::Plugin::RSS::Reader->new(
+      url   => 'http://www.regnum.ru/rss/index.xml'
+    );
+
+	
+    my @items = $rss->retrieve;
+	
+}
+sub reader_rss_my
+{
+	sub get_tag_rss()
+	{
+		my $text=$_[0];
+		my $var_tag=$_[1];
+		
+		print $var_tag.$text;
+		my $p1 = HTML::TokeParser->new(\$text) || die "Can't open: $!";
+		$p1->empty_element_tags(1);  # configure its behaviour
+		
+		while (my $token = $p1->get_tag("$var_tag")) 
+		{
+			return $p1->get_trimmed_text("/$var_tag");
+			last;
+		}
+	
+	}
+
+		my %hash_vinfo;
+		$hash_vinfo{id} = 1;
+		$hash_vinfo{url} = 'http://www.regnum.ru/rss/index.xml';
+		#$hash_vinfo{url} =~ s/hidetext/hidemail/g;
+
+		#$hash_vinfo{url} =~ s/ //g;
+		print $hash_vinfo{url}." <br>";
+	
+		my $res = get_page(\%hash_vinfo,'');
+	
+		$hash_vinfo{res_code}=$res->code;
+		$hash_vinfo{res_html} = $res->content; 
+		
+		$hash_vinfo{res_html} =~ s/\?xml/xml /g;
+		$hash_vinfo{res_html} =~ s/\"\?\>/\"\>\<\/xml\>/g;
+	
+		
+		
+		$p1 = HTML::TokeParser->new(\$hash_vinfo{res_html}) || die "Can't open: $!";
+		$p1->empty_element_tags(1);  # configure its behaviour
+		
+			while (my $token = $p1->get_tag("xml")) 
+			{
+				my $encoding = $token->[1]{encoding} || "-";
+				#my $url1 = $token->[1]{href} || "-";
+				my $text = $p1->get_trimmed_text("/xml");
+				$hash_vinfo{encoding}=$encoding;
+
+				last;
+
+			}
+		if ($hash_vinfo{encoding} eq 'Windows-1251')
+		{
+			$hash_vinfo{res_html} = Encode::decode('cp1251', $hash_vinfo{res_html});
+			$hash_vinfo{res_html} = Encode::encode('utf8', $hash_vinfo{res_html});
+			print "FFFFFFFFFFFFFFFFF $hash_vinfo{encoding} FFFFFFFFFFFFFFFFFFFFFFFFF";
+		}
+		
+		
+		#$hash_vinfo{res_html} =~ s/\<item\>/<item /g;
+		$hash_vinfo{res_html} =~ s/\<\!\[CDATA\[//g;
+		$hash_vinfo{res_html} =~ s/guid isPermaLink=\"true\"/guid/g;
+		$hash_vinfo{res_html} =~ s/yandex\:full-text/yandex-full-text/g;
+		
+		
+		my %hash_tags_read;
+		$hash_tags_read{title}=1;
+		$hash_tags_read{link}=1;
+		$hash_tags_read{description}=1;
+		$hash_tags_read{pubDate}=1;
+		$hash_tags_read{guid}=1;
+		$hash_tags_read{category}=1;
+		$hash_tags_read{author}=1;
+		$hash_tags_read{yandex-full-text}=1;
+		
+		
+		
+		for (keys %hash_tags_read)
+		{
+			$hash_vinfo{res_html} =~ s/\<$_\>/$_***/g;
+			$hash_vinfo{res_html} =~ s/\<\/$_\>//g;
+		}
+		
+		#$hash_vinfo{res_html} =~ s/\<title\>/title=\"/g;
+		#$hash_vinfo{res_html} =~ s/\<\/title\>/\"/g;
+
+		
+		$p1 = HTML::TokeParser->new(\$hash_vinfo{res_html}) || die "Can't open: $!";
+		$p1->empty_element_tags(1);  # configure its behaviour
+		
+			while (my $token = $p1->get_tag("item")) 
+			{
+				#my $url1 = $token->[1]{title} || "-";
+				
+				my $text = $p1->get_text("/item");
+					foreach my $line ($text)
+					{
+						print $line."&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&";
+					}
+				#my @m_mas = split(/\*\*\*/,$text);
+				#print "$text - $url1 KKKKKKKKKKKKKKKKKKKKK ";
+
+
+			}
+			
+			
+			
+			
+		print $hash_vinfo{res_html};
+
+}
+	&reader_rss_my();
+	
+	
+	exit;
+	
+	#&view_table1(\@items);
+	print "$items[1]{title} ";
+	print "$items[1]{pubDate} ";
+	print "$items[1]{link} ";
+	print "$items[1][0] ";

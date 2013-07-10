@@ -1,0 +1,286 @@
+    #!/usr/bin/perl
+# 
+
+#################################################################################
+# Perl :: 					#
+# ============================================================================= #
+#################################################################################
+
+use CGI qw ( :standart);
+use CGI::Carp qw ( fatalsToBrowser );  
+
+
+
+require HTML::Parser;
+ require HTML::TokeParser;
+ use Encode;
+# use warnings;
+
+require "../lib/def.pl";
+require "../lib/parse_lib.pl";
+
+
+print "Content-Type: text/html; charset=utf-8\n\n";my $text;
+	$varinfo{dbh}=condb("s9n.steadyhost.ru","0000","nawww_admin","1234567aA","nawww_main");
+
+sub reader_rss_wiki
+{
+use Wiki::Toolkit::Plugin::RSS::Reader;
+
+    my $rss = Wiki::Toolkit::Plugin::RSS::Reader->new(
+      url   => 'http://www.regnum.ru/rss/index.xml'
+    );
+
+	
+    my @items = $rss->retrieve;
+	
+}
+sub reader_rss_my
+{
+	my $varn=$_[0];
+	my $hash_rss_sourch=$_[1];
+
+
+		
+		
+	sub get_tag_rss()
+	{
+		my $text=$_[0];
+		my $var_tag=$_[1];
+		$var_tag =~ s/pubDate/pubdate1/g;
+		my $var_ret_text;
+		
+		#print $var_tag.$text;
+		my $p1 = HTML::TokeParser->new(\$text) || die "Can't open: $!";
+		$p1->empty_element_tags(1);  # configure its behaviour
+
+		while (my $token = $p1->get_tag("$var_tag")) 
+		{
+			
+			#print "% $var_tag %";
+			$var_ret_text = $p1->get_trimmed_text("/$var_tag");
+			if ($var_tag eq 'pubdate1') 
+			{
+				
+				
+				
+				use DateTime::Format::RSS;
+				my $fmt = DateTime::Format::RSS->new;
+				my $dt  = $fmt->parse_datetime($var_ret_text);
+				my $str = $fmt->format_datetime($dt);
+					$str =~ s/T/ /g;
+					$var_ret_text=$str;
+				#my $fmt = DateTime::Format::RSS->new(version => 2.0);
+				#print " $var_tag FFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFF $str F $var_ret_text F";
+			}
+	
+			return $var_ret_text;
+			last;
+		}
+	
+	
+	}
+	sub set_news()
+	{
+		my $varn=$_[0];
+		my $hash_rss_object=$_[1];
+		
+		
+		$fol=0;
+		#	print "SELECT * FROM `nawww_main`.`agro2b_rss_reader_all` where `link` =\'".$$hash_rss_object{link}."\' limit 0,1;";
+		my ($fol,$hhs) = &get_query($$varn{dbh},"SELECT * FROM `nawww_main`.`agro2b_rss_reader_all` where `link` =\'".$$hash_rss_object{link}."\' limit 0,1;","hash","pr");
+	
+	
+		if ($fol == 0)
+		{
+		
+			#my $fol8 = 1;
+			my $var_text_update_string_field;
+			my $var_text_update_string_value;
+			for (keys %$hash_rss_object)
+			{
+				if (length($$hash_rss_object{$_}) > 0)
+				{
+					$var_text_update_string_field =$var_text_update_string_field."`$_`, ";
+					$var_text_update_string_value =$var_text_update_string_value."'".&addslashes($$hash_rss_object{$_})."', ";
+				}
+			}
+			$var_text_update_string_field =$var_text_update_string_field."`date_add`,`date_edit`";
+			$var_text_update_string_value =$var_text_update_string_value."CURRENT_TIMESTAMP, CURRENT_TIMESTAMP";
+			#print "( $var_text_update_string_field ) ($var_text_update_string_value)";
+			#exit;
+			my ($fol8,$hhs8) = &get_query($$varn{dbh},"INSERT INTO `agro2b_rss_reader_all` ($var_text_update_string_field) values ($var_text_update_string_value)","ins","pr");
+		
+			#my ($fol,$hhs) = &get_query($$varn{dbh},"SELECT * FROM `nawww_main`.`agro2b_rss_reader_all` where `link` =\'".$$hash_rss_object{link}."\' limit 0,1;","hash","pr");
+			#&view_table1($hhs);
+			#my ($fol8,$hhs8) = &get_query($$varn{dbh},"DELETE FROM`agro2b_rss_reader_all` where `link` =\'".$$hash_rss_object{link}."\' limit 1;","ins","pr");
+			
+			#exit;
+			if ($fol8 == 1)
+			{
+				return 1;
+			}
+			else
+			{
+				return 0;
+			}
+	
+		}
+		
+	
+	
+	}
+
+	
+		my %hash_vinfo;
+		$hash_vinfo{id} = $$hash_rss_sourch{id};
+		#$hash_vinfo{url} = 'http://www.regnum.ru/rss/index.xml';
+		$hash_vinfo{url} = $$hash_rss_sourch{link_rss};
+		#$hash_vinfo{url} =~ s/hidetext/hidemail/g;
+
+
+		#$hash_vinfo{url} =~ s/ //g;
+		#print $hash_vinfo{url}." <br>";
+	
+		my $res = get_page(\%hash_vinfo,'');
+	
+		$hash_vinfo{res_code}=$res->code;
+		$hash_vinfo{res_html} = $res->content; 
+		
+		$hash_vinfo{res_html} =~ s/\?xml/xml /g;
+		$hash_vinfo{res_html} =~ s/\"\?\>/\"\>\<\/xml\>/g;
+	
+		
+		
+		$p1 = HTML::TokeParser->new(\$hash_vinfo{res_html}) || die "Can't open: $!";
+		$p1->empty_element_tags(1);  # configure its behaviour
+		
+			while (my $token = $p1->get_tag("xml")) 
+			{
+				my $encoding = $token->[1]{encoding} || "-";
+				#my $url1 = $token->[1]{href} || "-";
+				my $text = $p1->get_trimmed_text("/xml");
+				$hash_vinfo{encoding}=$encoding;
+				#print $hash_vinfo{encoding}."*";
+				#exit;
+				last;
+
+			}
+		if (lc($hash_vinfo{encoding}) eq 'windows-1251')
+		{
+			$hash_vinfo{res_html} = Encode::decode('cp1251', $hash_vinfo{res_html});
+			$hash_vinfo{res_html} = Encode::encode('utf8', $hash_vinfo{res_html});
+			#print "FFFFFFFFFFFFFFFFF $hash_vinfo{encoding} FFFFFFFFFFFFFFFFFFFFFFFFF";
+		}
+		
+		
+		#$hash_vinfo{res_html} =~ s/\<item\>/<item /g;
+		$hash_vinfo{res_html} =~ s/\<\!\[CDATA\[//g;
+		$hash_vinfo{res_html} =~ s/guid isPermaLink=\"true\"/guid/g;
+		$hash_vinfo{res_html} =~ s/yandex\:full-text/yandex-full-text/g;
+		
+		
+		my %hash_tags_read1;
+		$hash_tags_read1{title}='';
+		$hash_tags_read1{link}='';
+		$hash_tags_read1{description}='';
+		$hash_tags_read1{pubDate}='';
+		$hash_tags_read1{guid}='';
+		$hash_tags_read1{category}='';
+		$hash_tags_read1{author}='';
+		$hash_tags_read1{yandex-full-text}='';
+		
+		
+		
+		for (keys %hash_tags_read1)
+		{
+			$hash_vinfo{res_html} =~ s/\<$_\>/[$_]/g;
+			$hash_vinfo{res_html} =~ s/\<\/$_\>/\[\/$_\]/g;
+		}
+		$hash_vinfo{res_html} =~ s/pubDate/pubdate1/g;
+		
+		#$hash_vinfo{res_html} =~ s/\<title\>/title=\"/g;
+		#$hash_vinfo{res_html} =~ s/\<\/title\>/\"/g;
+
+		my $count_new=0;
+		$p1 = HTML::TokeParser->new(\$hash_vinfo{res_html}) || die "Can't open: $!";
+		$p1->empty_element_tags(1);  # configure its behaviour
+		
+			while (my $token = $p1->get_tag("item")) 
+			{
+				my %hash_rss_data;
+				
+				#my $url1 = $token->[1]{title} || "-";
+				
+				my $text = $p1->get_text("/item");
+				$text =~ s/\]\]\>//g;
+				$text =~ s/\[/\</g;
+				$text =~ s/\]/\>/g;
+				
+				$text =~ s/\>\>//g;
+				#print &get_tag_rss($text,"title")."WWWWWWWWWWWWWWWWWWWWWWWWWWWW";
+				#delete  $hash_tags_read1{0};
+				for (keys %hash_tags_read1)
+				{
+					
+					$hash_rss_data{$_} =&get_tag_rss($text,$_);
+					#print "55 $_ 55 $hash_rss_data{$_} 55 <br>";
+				}
+				#my @m_mas = split(/\*\*\*/,$text);
+				#print "$text - $url1 KKKKKKKKKKKKKKKKKKKKK ";
+				#link, title, description, pubDate, guid, category, author, yandex-full-text, text_news, language, date_add, date_edit
+				
+				if ($hash_rss_data{language} eq '') {$hash_rss_data{language}=$$hash_rss_sourch{lang};}
+				$count_new=$count_new+&set_news($varn,\%hash_rss_data);
+
+				
+			}
+			
+			
+			
+		return $count_new;	
+		#print $hash_vinfo{res_html};
+
+}
+
+sub downloads_and_parse
+{
+	my $varn=$_[0];
+	my $url_download=$_[1];
+	
+	my ($fol,$hhs) = &get_query($$varn{dbh},"SELECT * FROM `nawww_main`.`agro2b_rss_reader_sources` limit 0,1000;","hash","pr");
+		
+		&view_table1($hhs);
+	for my $col(0..$fol-1)
+	{
+		my %hash_vinfo;
+		
+		my $count_new_news=&reader_rss_my(\%varinfo,$$hhs[$col]);
+		my ($fol8,$hhs8) = &get_query($$varn{dbh},"INSERT INTO `agro2b_rss_new_statistics` (`id_rss_cources`, `count_new`, `date_add`, `date_edit`) values ('".$$hhs[$col]{id}."', '".$count_new_news."',CURRENT_TIMESTAMP,CURRENT_TIMESTAMP)","ins","pr");
+		my ($fol8,$hhs8) = &get_query($$varn{dbh},"UPDATE `agro2b_rss_reader_sources` SET `date_rss_read`=CURRENT_TIMESTAMP limit 1","ins","pr");
+	
+		print "$$hhs[$col]{id} $$hhs[$col]{link_rss} COUNT:".$count_new_news."<br>\n\n";
+		
+	}
+		
+		
+		
+	
+	
+	
+}
+
+
+	#&reader_rss_my(\%varinfo,'http://news.yandex.ru/Rostov/index.rss');
+	#&reader_rss_my(\%varinfo,'http://www.zol.ru/z-news/lastnews.php');
+	#&reader_rss_my(\%varinfo,'http://www.regnum.ru/rss/index.xml');
+	&downloads_and_parse(\%varinfo,'http://www.regnum.ru/rss/index.xml');
+
+	
+	exit;
+	
+	#&view_table1(\@items);
+	print "$items[1]{title} ";
+	print "$items[1]{pubDate} ";
+	print "$items[1]{link} ";
+	print "$items[1][0] ";

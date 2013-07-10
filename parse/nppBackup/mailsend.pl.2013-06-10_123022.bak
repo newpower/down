@@ -1,0 +1,35 @@
+#!/usr/bin/perl
+
+#view errors to browser
+use CGI qw ( :standart);
+use CGI::Carp qw ( fatalsToBrowser );  
+
+require "../lib/def.pl";
+require "../lib/parse_lib.pl";
+
+	$varinfo{dbh}=condb("localhost","0000","root","280286","sh_downloads_zol");
+	$varinfo2{dbh}=condb("localhost","0000","root","280286","sub_email");
+print "Content-Type: text/html; charset=utf-8\n\n";
+
+use MIME::Lite;
+	
+sub send_message
+{
+	my $varn=$_[0];
+	#my $my_str1=get_name_translit($_[1]);
+	my $per=rand();
+	
+		
+    $msg = MIME::Lite->new(
+        From     =>'admin@agro2b.nawww.ru',
+        To       =>'89185458500@mail.ru',
+        Subject  =>"Helloooooo, nurse! test $per",
+        Data     =>"Тест и проверка отправки $per"
+    );
+
+    $msg->attr('content-type.charset' => 'UTF-8');
+    $msg->add('X-Comment' => 'ID $per');
+	$msg->send('smtp', 'agro2b.nawww.ru', 'AuthUser'=>'admin@agro2b.nawww.ru', 'AuthPass'=>'1234567aA','Debug'=>'1');
+	
+}
+

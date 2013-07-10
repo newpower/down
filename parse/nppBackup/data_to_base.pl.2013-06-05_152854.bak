@@ -1,0 +1,223 @@
+﻿#!/usr/bin/perl
+# 
+
+#################################################################################
+# Perl :: 					#
+# ============================================================================= #
+#################################################################################
+
+use CGI qw ( :standart);
+use CGI::Carp qw ( fatalsToBrowser );  
+
+
+
+require HTML::Parser;
+ require HTML::TokeParser;
+ use Encode;
+# use warnings;
+
+require "../lib/def.pl";
+require "../lib/parse_lib.pl";
+
+	$varinfo{dbh}=condb("localhost","0000","root","280286","sh_downloads_zol");
+print "Content-Type: text/html; charset=utf-8\n\n";
+
+
+&rest_run(\%varinfo);;
+
+sub rest_run 
+{
+	my $varn=$_[0];
+	my $id_string=$_[1];
+	
+	
+	
+ use REST::Client;
+ 
+ #  `id` char(5) NOT NULL,
+ # `name` varchar(255) DEFAULT NULL,
+ # `region_id` int(10) unsigned DEFAULT NULL,
+ # `division_id` int(10) unsigned DEFAULT NULL,
+ # `email` varchar(255) DEFAULT NULL,
+ # `phone` varchar(255) DEFAULT NULL,
+ # `message` text,
+ # `price` int(10) unsigned DEFAULT NULL,
+ 
+  #The basic use case
+ my $client = REST::Client->new();
+  $client->addHeader('name', 'Value1');
+  $client->addHeader('phone', 'Value2');
+
+# $client->POST('http://www.agro2b.ru/api/preoffer');
+# print $client->responseCode();
+# print $client->responseContent();
+
+# $client->PUT('http://www.agro2b.ru/api/preoffer/NuCK8?name=visio&phone=888');
+#print $client->responseContent();
+ 
+ #print "\n <br> ResCode:".$client->responseCode();
+ #print "\n <br> ResCont:".$client->responseContent();
+ #print "\n <br> ResHead:";
+ #print $client->responseHeaders();
+ 
+  $client->GET('http://www.agro2b.ru/api/region/1011354');
+  my $res_html = $client->responseContent();
+#  	
+  	$res_html =~ s/{"id":/\+\id:/g;
+	$res_html =~ s/\"//g;
+	$res_html =~ s/region://g;
+	$res_html =~ s/\{//g;
+	$res_html =~ s/\}//g;
+	$res_html =~ s/\[//g;
+	$res_html =~ s/\]//g;
+ $res_html =substr($res_html,1,length($res_html)-1);
+  
+ my @m_mas_var = split(/\+/,$res_html);
+#  $res_html =substr($m_mas[1],1,length($m_mas[1])-2);
+   
+#    my @m_mas = split(/\,/,$res_html);
+	
+
+   	for my $col(0..$#m_mas_var-1)
+	{
+		my %hash_string;
+		print $m_mas_var[$col]; print "<br><br>";
+		my @m_mas_perem = split(/\,/,$m_mas_var[$col]);
+		for my $col_perem(0..$#m_mas_perem-1)
+		{
+			print "<br> - ".$m_mas_perem[$col_perem]; print " - <br>";
+			my @element_m_mas = split(/\:/,$m_mas_perem[$col_perem]);
+
+			
+			my $per = $element_m_mas[0];
+			if (($per eq 'name') or ($per eq 'socr')) {print "ddddddddddddddddddddddddddd"; $element_m_mas[1]="'".$element_m_mas[1]."'";}
+			$hash_string{$per} = $element_m_mas[1];
+		
+					print "+".$element_m_mas[0]; print "+<br>";
+			print "+".$element_m_mas[1]; print "+<br>";
+		}
+		$fol = 1;
+		my ($fol,$hhs) = &get_query($$varn{"dbh2"},"SELECT * FROM `sh_downloads_zol`.`dic_region` where `id` = '".$hash_string{id}."'","hash","pr");
+		if ($fol == 0)
+		{
+		my $str_per2 = "INSERT INTO `dic_region` ($str_per1,`id`) values ($str_per2,\'".$hash_vinfo{id}."\')";
+			
+			#print $str_per2;
+		#	my ($fol3,$hhs3) = &get_query($$varn{"dbh"},$str_per2,"ins","do");
+		print $str_per2;
+		
+		}
+
+		 
+		 
+	}
+  
+ #print "\n <br> ResCont:".$res_html;
+ 
+ }
+ 
+
+ 
+
+sub seach_str_in_table
+{
+	my $varn=$_[0];
+	my $my_str1=get_name_translit($_[1]);
+	my $table = $_[2];
+	my $proc;
+	my %hash_word=();
+	my %hash_count_ves=();
+		
+	my ($fol32,$hhs32) = &get_query($$varn{"dbh2"},"SELECT * FROM `seach_table_results` where `str_seach` = '".$my_str1."' order by `proc` desc limit 0,1;","hash",'pr');
+	if ($fol32 > 0) {$id_model=$$hhs32[0]{id_table}; $proc=$$hhs32[0]{proc};}
+	else
+	{
+		my @mas_vrem2 = split(/_/,$my_str1);
+		my @mas_vrem3;
+		for (@mas_vrem2) {push (@mas_vrem3, $_) if length($_)>0; }
+		push (@mas_vrem2, $my_str1);
+		my $iu;
+			for ($iu=0;$iu<$#mas_vrem3-1;$iu++) {if ($mas_vrem3[$iu] ne '')  {push (@mas_vrem2, $mas_vrem3[$iu]."_".$mas_vrem3[$iu+1]);}}
+		
+		
+	}
+		
+
+}
+
+	
+sub data_to_basse_sity 
+{
+	$varinfo{dbh}=condb("localhost","0000","root","280286","sh_downloads_zol");
+
+	print "Content-Type: text/html; charset=utf-8\n\n";
+	my $text;
+
+	open(FIL,"KLADR.csv");
+	my @strings=<FIL>;
+
+	my %hash_to_base;
+	foreach $line (@strings)
+	{
+		my @m_mas = split(/\;/,$line);
+		$hash_to_base{id}=$m_mas[2];
+		$hash_to_base{name}=$m_mas[0];
+		$hash_to_base{name_socr}=$m_mas[1];
+
+		my ($fol3,$hhs3) = &get_query($varinfo{dbh},"INSERT INTO `dic_sity` (`id`,`name`,`name_socr`,`datetime_create`) values ('$hash_to_base{id}','$hash_to_base{name}','$hash_to_base{name_socr}',CURRENT_TIMESTAMP)","ins","do");
+		
+		#print $line;
+	}
+	print "ok";
+
+
+}
+
+sub main1
+{
+	$varinfo{dbh}=condb("localhost","0000","root","280286","sh_downloads_zol");
+
+	print "Content-Type: text/html; charset=utf-8\n\n";
+	my $text;
+
+	open(FIL,"divisions.txt");
+	my @strings=<FIL>;
+
+	my %hash_to_base;
+	foreach $line (@strings)
+	{
+		my @m_mas = split(/\;/,$line);
+		#$m_mas[0] =~ s/﻿﻿//g;
+		$hash_to_base{iddictionary_divisions}=$m_mas[0];
+		$hash_to_base{iddictionary_divisions}++;
+		$hash_to_base{iddictionary_divisions}--;
+		$hash_to_base{id2}=$m_mas[1];
+		$hash_to_base{name}=$m_mas[2];
+		my ($fol3,$hhs3) = &get_query($varinfo{dbh},"INSERT INTO `dictionary_divisions` (`iddictionary_divisions`,`id2`,`name`,`datetime_create`) values ('$hash_to_base{iddictionary_divisions}','$hash_to_base{id2}','$hash_to_base{name}',CURRENT_TIMESTAMP)","ins","do");
+		
+		#print $line;
+	}
+	print "ok";
+
+}
+
+sub sendmail
+{
+	use MIME::Lite;
+
+		my $per=rand();
+		
+    $msg = MIME::Lite->new(
+        From     =>'vipdo@yandex.ru',
+        To       =>'89185458500@mail.ru',
+        Subject  =>'Helloooooo, nurse!',
+        Data     =>"Тест и проверка отправки $per"
+    );
+
+
+
+    $msg->attr('content-type.charset' => 'UTF-8');
+    #$msg->add('X-Comment' => 'A message for you');
+	$msg->send('smtp', 'smtp.yandex.ru', 'AuthUser'=>'vipdo', 'AuthPass'=>'425qwe','Debug'=>'1');
+
+}

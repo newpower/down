@@ -1,0 +1,74 @@
+﻿#!/usr/bin/perl
+# 
+
+#################################################################################
+# Perl :: 					#
+# ============================================================================= #
+#################################################################################
+
+use CGI qw ( :standart);
+use CGI::Carp qw ( fatalsToBrowser );  
+
+
+
+require HTML::Parser;
+ require HTML::TokeParser;
+ use Encode;
+# use warnings;
+
+require "../lib/def.pl";
+require "../lib/parse_lib.pl";
+
+	$varinfo{dbh}=condb("localhost","0000","root","280286","sh_downloads_zol");
+	
+sub seach_world
+{
+	$varinfo{dbh}=condb("localhost","0000","root","280286","sh_downloads_zol");
+
+	print "Content-Type: text/html; charset=utf-8\n\n";
+	my $text;
+
+	open(FIL,"KLADR.csv");
+	my @strings=<FIL>;
+
+	my %hash_to_base;
+	foreach $line (@strings)
+	{
+		my @m_mas = split(/\;/,$line);
+		$hash_to_base{id}=$m_mas[2];
+		$hash_to_base{name}=$m_mas[0];
+		$hash_to_base{name_socr}=$m_mas[1];
+
+		my ($fol3,$hhs3) = &get_query($varinfo{dbh},"INSERT INTO `dic_sity` (`id`,`name`,`name_socr`,`datetime_create`) values ('$hash_to_base{id}','$hash_to_base{name}','$hash_to_base{name_socr}',CURRENT_TIMESTAMP)","ins","do");
+		
+		#print $line;
+	}
+	print "ok";
+
+
+}
+
+sub main1
+{
+	$varinfo{dbh}=condb("localhost","0000","root","280286","sh_downloads_zol");
+
+print "Content-Type: text/html; charset=utf-8\n\n";
+my $text;
+
+open(FIL,"divisions.csv");
+my @strings=<FIL>;
+
+my %hash_to_base;
+foreach $line (@strings)
+{
+	my @m_mas = split(/\;/,$line);
+	$hash_to_base{iddictionary_divisions}=$m_mas[0];
+	$hash_to_base{id2}=$m_mas[1];
+	$hash_to_base{name}=$m_mas[2];
+	my ($fol3,$hhs3) = &get_query($varinfo{dbh},"INSERT INTO `dictionary_divisions` (`iddictionary_divisions`,`id2`,`name`,`datetime_create`) values ('$hash_to_base{iddictionary_divisions}','$hash_to_base{id2}','$hash_to_base{name}',CURRENT_TIMESTAMP)","ins","do");
+		
+	#print $line;
+}
+print "ok";
+
+}

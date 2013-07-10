@@ -1,0 +1,19 @@
+
+
+	use MIME::Lite;
+
+		my $per=rand();
+		
+    $msg = MIME::Lite->new(
+        From     =>'admin@agro2b.nawww.ru',
+        To       =>'89185458500@mail.ru',
+        Subject  =>"Helloooooo, nurse! test $per",
+        Data     =>"Тест и проверка отправки $per"
+    );
+
+
+
+    $msg->attr('content-type.charset' => 'UTF-8');
+    $msg->add('X-Comment' => 'A message for you');
+	$msg->send('smtp', 'agro2b.nawww.ru', 'AuthUser'=>'admin@agro2b.nawww.ru', 'AuthPass'=>'1234567aA','Debug'=>'1');
+	
